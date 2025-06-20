@@ -3,26 +3,24 @@ FROM python:3.12.3
 WORKDIR /app
 COPY . .
 
-# Update and clean APT packages (no packages listed, so this line is safe to remove too if no packages needed)
+# APT (can be skipped if no packages are needed)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip and install dependencies
+# Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r master.txt
 
-# Debug: List files and print serverV3.py content
-RUN echo "Listing files in /app..." && ls -la && \
-    echo "Showing serverV3.py contents..." && cat serverV3.py
+# Debug: check files
+RUN ls -la && cat serverV3.py || true
 
-# Debug: Run serverV3.py with traceback to catch errors during build
-RUN python -c "import traceback; \
-try: \
-    exec(open('serverV3.py').read()); \
-except Exception: \
-    traceback.print_exc(); \
-    exit(1)"
+# Create a temporary test script to catch errors in serverV3.py
+RUN echo 'import traceback\ntry:\n    exec(open("serverV3.py").read())\nexcept Exception:\n    traceback.print_exc()\n    exit(1)' > test_server.py
 
-# Default container start command
+# Run test script
+RUN python test_server.py
+
+# Default container command
 CMD ["python", "./main.py"]
+
