@@ -3,25 +3,28 @@ FROM python:3.12.3
 WORKDIR /app
 COPY . .
 
-# APT (can be skipped if no packages are needed)
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends && \
-    rm -rf /var/lib/apt/lists/*
+# Add current directory to PYTHONPATH for local imports
+ENV PYTHONPATH=/app
 
-# Install Python dependencies
+# Install dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r master.txt
 
-# Debug: check files
-RUN ls -la && cat serverV3.py || true
+# Show structure to debug
+RUN ls -la /app && echo "Python path:" && python -c "import sys; print(sys.path)"
 
-# Create a temporary test script to catch errors in serverV3.py
-#RUN echo 'import traceback\ntry:\n    exec(open("serverV3.py").read())\nexcept Exception:\n    traceback.print_exc()\n    exit(1)' > test_server.py
+# Create test_server.py safely using tee
+RUN tee test_server.py > /dev/null <<EOF
+import traceback
+try:
+    exec(open("serverV3.py").read())
+except Exception:
+    traceback.print_exc()
+    exit(1)
+EOF
 
-ENV PYTHONPATH=/app
-# Run test script
+# Run the test script
 RUN python test_server.py
 
-# Default container command
+# Default command
 CMD ["python", "./main.py"]
-
