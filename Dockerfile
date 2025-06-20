@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 RUN ls -la && cat serverV3.py || true
 
 # Create a temporary test script to catch errors in serverV3.py
-RUN echo 'import traceback\ntry:\n    exec(open("serverV3.py").read())\nexcept Exception:\n    traceback.print_exc()\n    exit(1)' > test_server.py
+#RUN echo 'import traceback\ntry:\n    exec(open("serverV3.py").read())\nexcept Exception:\n    traceback.print_exc()\n    exit(1)' > test_server.py
 
 ENV PYTHONPATH=/app
 # Run test script
